@@ -6,6 +6,7 @@ import (
 	"strconv"
 
 	"github.com/fajarhidayad/go-fiber-restful/config"
+	"github.com/fajarhidayad/go-fiber-restful/models"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
@@ -24,7 +25,8 @@ func ConnectDB() {
 
 	dsn := fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%d sslmode=disable", config.Config("DB_HOST"), config.Config("DB_USER"), config.Config("DB_PASSWORD"), config.Config("DB_NAME"), port)
 
-	DB, err = gorm.Open(postgres.Open(dsn), &gorm.Config{})
+	DB, err = gorm.Open(postgres.Open(dsn), &gorm.Config{TranslateError: true})
+	DB.AutoMigrate(&models.User{}, &models.Product{})
 
 	if err != nil {
 		panic("Failed to connect DB")
