@@ -1,8 +1,10 @@
 package main
 
 import (
+	"fmt"
 	"log"
 
+	"github.com/fajarhidayad/go-fiber-restful/config"
 	"github.com/fajarhidayad/go-fiber-restful/db"
 	"github.com/fajarhidayad/go-fiber-restful/routes"
 	"github.com/gofiber/fiber/v2"
@@ -22,5 +24,7 @@ func main() {
 
 	routes.Routes(app)
 
-	log.Fatal(app.Listen(":8000"))
+	PORT := fmt.Sprintf(":%s", config.Config("PORT"))
+
+	log.Fatal(app.Listen(PORT))
 }
