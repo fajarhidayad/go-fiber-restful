@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"github.com/fajarhidayad/go-fiber-restful/db"
+	"github.com/fajarhidayad/go-fiber-restful/handlers"
 	"github.com/fajarhidayad/go-fiber-restful/models"
 	"github.com/gofiber/fiber/v2"
 )
@@ -21,16 +22,29 @@ func GetAllProduct(c *fiber.Ctx) error {
 	})
 }
 
+func GetProductById(c *fiber.Ctx) error {
+	db := db.DB
+	id, _ := c.ParamsInt("id")
+	var product models.Product
+
+	if err := db.First(&product, uint(id)).Error; err != nil {
+		return handlers.ErrorNotFound(c, "Product not found")
+	}
+
+	return c.JSON(fiber.Map{
+		"status":  "success",
+		"message": "Product found",
+		"data":    product,
+	})
+}
+
 func CreateNewProduct(c *fiber.Ctx) error {
 	db := db.DB
 
 	newProduct := new(models.Product)
 
 	if err := c.BodyParser(&newProduct); err != nil {
-		return c.Status(http.StatusBadRequest).JSON(fiber.Map{
-			"status":  "failed",
-			"message": "Please fill the form",
-		})
+		return handlers.CustomError(c, http.StatusBadRequest, "Please fill the form")
 	}
 	db.Create(&newProduct)
 
@@ -46,20 +60,14 @@ func ChangeProductById(c *fiber.Ctx) error {
 	updatedProduct := new(models.Product)
 
 	if err := c.BodyParser(&updatedProduct); err != nil {
-		return c.Status(http.StatusBadRequest).JSON(fiber.Map{
-			"status":  "failed",
-			"message": "Please fill the form",
-		})
+		return handlers.CustomError(c, http.StatusBadRequest, "Please fill the form")
 	}
 
 	id, _ := c.ParamsInt("id")
 
 	var result models.Product
 	if err := db.First(&result, uint(id)).Error; err != nil {
-		return c.Status(http.StatusNotFound).JSON(fiber.Map{
-			"status":  "failed",
-			"message": "Product not found",
-		})
+		return handlers.ErrorNotFound(c, "Product not found")
 	}
 
 	db.Model(&result).Updates(updatedProduct)
@@ -68,7 +76,6 @@ func ChangeProductById(c *fiber.Ctx) error {
 		"status":  "success",
 		"message": "Product updated",
 	})
-
 }
 
 func DeleteProduct(c *fiber.Ctx) error {
@@ -78,10 +85,7 @@ func DeleteProduct(c *fiber.Ctx) error {
 	id, _ := c.ParamsInt("id")
 
 	if err := db.First(&product, uint(id)).Error; err != nil {
-		return c.Status(http.StatusNotFound).JSON(fiber.Map{
-			"status":  "failed",
-			"message": "Product not found",
-		})
+		return handlers.ErrorNotFound(c, "Product not found")
 	}
 
 	db.Delete(&product, id)
